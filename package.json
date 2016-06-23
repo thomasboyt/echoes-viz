@@ -1,0 +1,32 @@
+{
+  "name": "boss-vis",
+  "private": true,
+  "version": "0.0.1",
+  "description": "",
+  "author": "",
+  "scripts": {
+    "run": "webpack-dev-server --config webpack/dev.js",
+    "build": "webpack --config webpack/production.js && webpack --config webpack/server.js",
+    "lint": "tslint src/**/*.ts"
+  },
+  "devDependencies": {
+    "babel-core": "^6.3.17",
+    "babel-loader": "^6.2.0",
+    "babel-preset-es2015": "^6.3.13",
+    "css-loader": "^0.13.1",
+    "extract-text-webpack-plugin": "^1.0.1",
+    "html-webpack-plugin": "^2.19.0",
+    "style-loader": "^0.12.2",
+    "ts-loader": "^0.8.1",
+    "tslint": "^3.7.4",
+    "typescript": "^1.8.9",
+    "webpack": "^1.13.1",
+    "webpack-create-vendor-chunk": "^0.1.1",
+    "webpack-dev-server": "^1.14.1",
+    "webpack-merge": "^0.3.2"
+  },
+  "dependencies": {
+    "babel-polyfill": "^6.9.1",
+    "lodash": "^4.13.1"
+  }
+}
