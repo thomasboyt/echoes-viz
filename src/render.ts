@@ -1,6 +1,11 @@
 import {
   initRadius,
+  width,
+  height,
+  lineWidth,
 } from './constants';
+
+import State, {Layer} from './state';
 
 function getNSidedPoints(r: number, n: number): number[][] {
   return _.range(0, n+1).map((i) => {
@@ -74,4 +79,47 @@ export function hexagonToCircle(ctx: CanvasRenderingContext2D, interp: number) {
 
     ctx.quadraticCurveTo(interpCpx, interpCpy, next[0], next[1]);
   }
+}
+
+function renderShape(
+  ctx: CanvasRenderingContext2D,
+  drawShape: (ctx: CanvasRenderingContext2D) => void,
+  scale: number) {
+
+  ctx.save();
+
+  ctx.scale(scale, scale);
+
+  ctx.beginPath();
+  drawShape(ctx);
+  ctx.closePath();
+
+  ctx.restore();
+
+  ctx.stroke();
+}
+
+export default function render(ctx: CanvasRenderingContext2D, state: State) {
+  ctx.fillStyle = 'black';
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = lineWidth;
+
+  ctx.save();
+
+  ctx.translate(width / 2, height / 2);
+
+  const transitionFn = (ctx) => state.getTransitionFn()(ctx, state.interp);
+
+  renderShape(ctx, transitionFn, 1);
+
+  state.layers.forEach((layer: Layer) => {
+    ctx.save();
+    ctx.rotate(layer.angle)
+    renderShape(ctx, transitionFn, layer.radius / initRadius);
+    ctx.restore();
+  });
+
+  ctx.restore();
 }
