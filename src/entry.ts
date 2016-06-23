@@ -1,6 +1,8 @@
 require('babel-polyfill');
 import _ from 'lodash';
 
+import qs from 'query-string';
+
 import {
   speed,
   spawnMs,
@@ -50,7 +52,11 @@ const transitions = [
   reverseTransition(hexagonToRectangle),
   hexagonToCircle,
   reverseTransition(hexagonToCircle),
-]
+];
+
+interface StateOpts {
+  initialTransitionIndex?: number;
+}
 
 class State {
   layers: Layer[];
@@ -61,14 +67,14 @@ class State {
 
   private transitionIdx: number;
 
-  constructor() {
+  constructor(opts: StateOpts) {
     this.lastSpawn = 0;
     this.layers = [];
 
     this.origin = [width / 2, height / 2];
 
     this.interp = 0;
-    this.transitionIdx = 0;
+    this.transitionIdx = opts.initialTransitionIndex || 0;
   }
 
   getTransitionFn() {
@@ -178,8 +184,14 @@ function render(ctx: CanvasRenderingContext2D, state: State) {
   ctx.restore();
 }
 
+const query = qs.parse(location.search);
+
 let time = Date.now();
-const state = new State();
+
+const state = new State({
+  initialTransitionIndex: query.transition ? parseInt(query.transition) : null,
+});
+
 function runLoop() {
   const now = Date.now();
   const dt = now - time;
@@ -188,7 +200,9 @@ function runLoop() {
   state.update(dt, now);
   render(ctx, state);
 
-  window.requestAnimationFrame(runLoop);
+  if (!query.paused) {
+    window.requestAnimationFrame(runLoop);
+  }
 }
 
 window.requestAnimationFrame(runLoop);

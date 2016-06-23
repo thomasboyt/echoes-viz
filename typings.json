@@ -2,6 +2,7 @@
   "name": "echoes-viz",
   "dependencies": {},
   "globalDependencies": {
-    "lodash": "registry:dt/lodash#3.10.0+20160619033623"
+    "lodash": "registry:dt/lodash#3.10.0+20160619033623",
+    "query-string": "registry:dt/query-string#3.0.0+20160331065456"
   }
 }
