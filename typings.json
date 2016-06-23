@@ -1,5 +1,5 @@
 {
-  "name": "boss-vis",
+  "name": "echoes-viz",
   "dependencies": {},
   "globalDependencies": {
     "lodash": "registry:dt/lodash#3.10.0+20160619033623"
