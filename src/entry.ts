@@ -1,6 +1,21 @@
 require('babel-polyfill');
 import _ from 'lodash';
 
+import {
+  speed,
+  spawnMs,
+  accelFactor,
+  originMoveSpeed,
+  initRadius,
+  interpSpeed,
+  rotateSpeed,
+} from './constants';
+
+import {
+  hexagonToCircle,
+  hexagonToRectangle,
+} from './render';
+
 // 16:9
 const width = 800;
 const height = 450;
@@ -13,6 +28,7 @@ const ctx = canvas.getContext('2d');
 
 interface Layer {
   radius: number;
+  angle: number;
 }
 
 const lineWidth = 5;
@@ -20,13 +36,21 @@ const halfW = width / 2;
 const halfH = height / 2;
 const maxRadius = Math.sqrt(halfW * halfW + halfH * halfH) + lineWidth;
 
-// TODO: Add control panel to change these
-const speed = 60 / 1000;
-const spawnMs = 400;
-const accelFactor = 20 / 1000;
-const originMoveSpeed = 30 / 1000;
-const initRadius = 30;
-const interpSpeed = 1 / 1000;
+type TransitionFn = (ctx: CanvasRenderingContext2D, interp: number) => void;
+
+// Flips the direction of "interp" value
+function reverseTransition(fn: TransitionFn) {
+  return function(ctx: CanvasRenderingContext2D, interp: number) {
+    return fn(ctx, 1 - interp);
+  };
+}
+
+const transitions = [
+  hexagonToRectangle,
+  reverseTransition(hexagonToRectangle),
+  hexagonToCircle,
+  reverseTransition(hexagonToCircle),
+]
 
 class State {
   layers: Layer[];
@@ -34,32 +58,45 @@ class State {
 
   origin: number[];
   interp: number;
-  private interpDir: number;
+
+  private transitionIdx: number;
 
   constructor() {
     this.lastSpawn = 0;
     this.layers = [];
 
     this.origin = [width / 2, height / 2];
+
     this.interp = 0;
-    this.interpDir = 1;
+    this.transitionIdx = 0;
+  }
+
+  getTransitionFn() {
+    return transitions[this.transitionIdx];
   }
 
   private addLayer() {
     this.layers.push({
       radius: initRadius,
+      angle: 0,
     });
   }
 
+  private nextTransition() {
+    this.interp = 0;
+
+    this.transitionIdx = this.transitionIdx + 1;
+
+    if (this.transitionIdx > transitions.length - 1) {
+      this.transitionIdx = 0;
+    }
+  }
+
   update(dt: number, now: number) {
-    this.interp += dt * interpSpeed * this.interpDir;
+    this.interp += dt * interpSpeed;
 
     if (this.interp > 1) {
-      this.interp = 1;
-      this.interpDir = -1;
-    } else if (this.interp < 0) {
-      this.interp = 0;
-      this.interpDir = 1;
+      this.nextTransition();
     }
 
     if (now > this.lastSpawn + spawnMs) {
@@ -79,7 +116,10 @@ class State {
         idxsToSweep.push(idx);
       }
 
-      return {radius};
+      return {
+        radius,
+        angle: layer.angle + dt * rotateSpeed,
+      };
     });
 
     _.pullAt(this.layers, idxsToSweep);
@@ -113,38 +153,6 @@ function renderShape(
   ctx.stroke();
 }
 
-function drawCircle(ctx: CanvasRenderingContext2D) {
-  ctx.arc(0, 0, initRadius, 0, 2 * Math.PI);
-}
-
-function drawHexagon(ctx: CanvasRenderingContext2D, interp: number) {
-  const r = initRadius;
-
-  const points = _.range(0, 7).map((n) => {
-    return [
-      Math.round(r * Math.cos(2 * Math.PI * n/6)),
-      Math.round(r * Math.sin(2 * Math.PI * n/6)),
-    ]
-  });
-
-  ctx.moveTo(points[0][0], points[0][1]);
-  for (let i = 1; i < points.length - 1; i += 1) {
-    const cur = points[i];
-    const next = points[i + 1];
-    const xc = (cur[0] + next[0]) / 2;
-    const yc = (cur[1] + next[1]) / 2;
-
-    // INTERPOLATE FROM xc to cur[0] and xy to cur[1]
-    const ix = cur[0] + (xc - cur[0]) * interp;
-    const iy = cur[1] + (yc - cur[1]) * interp;
-
-    ctx.quadraticCurveTo(cur[0], cur[1], ix, iy);
-  }
-
-  const last = points[points.length - 1];
-  ctx.quadraticCurveTo(last[0], last[1], points[0][0], points[0][1]);
-}
-
 function render(ctx: CanvasRenderingContext2D, state: State) {
   ctx.fillStyle = 'black';
   ctx.fillRect(0, 0, width, height);
@@ -156,10 +164,15 @@ function render(ctx: CanvasRenderingContext2D, state: State) {
 
   ctx.translate(state.origin[0], state.origin[1]);
 
-  renderShape(ctx, (ctx) => drawHexagon(ctx, state.interp), 1);
+  const transitionFn = (ctx) => state.getTransitionFn()(ctx, state.interp);
+
+  renderShape(ctx, transitionFn, 1);
 
   state.layers.forEach((layer: Layer) => {
-    renderShape(ctx, (ctx) => drawHexagon(ctx, state.interp), layer.radius / initRadius);
+    ctx.save();
+    ctx.rotate(layer.angle)
+    renderShape(ctx, transitionFn, layer.radius / initRadius);
+    ctx.restore();
   });
 
   ctx.restore();
