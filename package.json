@@ -8,7 +8,7 @@
     "run": "webpack-dev-server --config webpack/dev.js",
     "build": "webpack --config webpack/production.js",
     "lint": "tslint src/**/*.ts",
-    "deploy": "./up.js"
+    "deploy": "npm run build && ./up.js"
   },
   "devDependencies": {
     "babel-core": "^6.3.17",
