@@ -50,21 +50,28 @@ export function hexagonToRectangle(ctx: CanvasRenderingContext2D, interp: number
 // 0 = hexagon, 1 = circle
 export function hexagonToCircle(ctx: CanvasRenderingContext2D, interp: number) {
   const points = getNSidedPoints(initRadius, 6);
+  const sweep = Math.PI * 2 / 6;
 
   ctx.moveTo(points[0][0], points[0][1]);
-  for (let i = 1; i < points.length - 1; i += 1) {
+  for (let i = 0; i < points.length - 1; i += 1) {
     const cur = points[i];
     const next = points[i + 1];
-    const xc = (cur[0] + next[0]) / 2;
-    const yc = (cur[1] + next[1]) / 2;
 
-    // INTERPOLATE FROM xc to cur[0] and xy to cur[1]
-    const ix = cur[0] + (xc - cur[0]) * interp;
-    const iy = cur[1] + (yc - cur[1]) * interp;
+    // TODO: How does this work :(
+    // Adapted from http://stackoverflow.com/a/26948225
+    const sAngle = sweep * i;
+    const eAngle = sweep * (i + 1);
+    const x1 = initRadius * Math.cos((eAngle + sAngle) / 2);
+    const y1 = initRadius * Math.sin((eAngle + sAngle) / 2);
+    const fullCpx = 2 * x1 - cur[0] / 2 - next[0] / 2;
+    const fullCpy = 2 * y1 - cur[1] / 2 - next[1] / 2;
 
-    ctx.quadraticCurveTo(cur[0], cur[1], ix, iy);
+    const midX = (cur[0] + next[0]) / 2;
+    const midY = (cur[1] + next[1]) / 2;
+
+    const interpCpx = getInterp(midX, fullCpx, interp);
+    const interpCpy = getInterp(midY, fullCpy, interp);
+
+    ctx.quadraticCurveTo(interpCpx, interpCpy, next[0], next[1]);
   }
-
-  const last = points[points.length - 1];
-  ctx.quadraticCurveTo(last[0], last[1], points[0][0], points[0][1]);
 }
