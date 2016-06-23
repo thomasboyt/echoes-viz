@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const execSync = require('child_process').execSync;
 
 const secret = require('./secret');
