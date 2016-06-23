@@ -6,7 +6,7 @@
   "author": "",
   "scripts": {
     "run": "webpack-dev-server --config webpack/dev.js",
-    "build": "webpack --config webpack/production.js && webpack --config webpack/server.js",
+    "build": "webpack --config webpack/production.js",
     "lint": "tslint src/**/*.ts"
   },
   "devDependencies": {
