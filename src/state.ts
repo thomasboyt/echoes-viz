@@ -8,6 +8,7 @@ import {
   initRadius,
   interpSpeed,
   rotateSpeed,
+  transitionPauseMs,
 
   lineWidth,
   width,
@@ -27,11 +28,19 @@ interface StateOpts {
   initialTransitionIndex?: number;
 }
 
+enum TransitionState {
+  InTransition,
+  BetweenTransition,
+}
+
 export default class State {
+  private transitionState: TransitionState;
+
   layers: Layer[];
   private lastSpawn: number;
 
   interp: number;
+  private nextTransitionAt: number;
 
   private transitionIdx: number;
 
@@ -41,6 +50,8 @@ export default class State {
 
     this.interp = 0;
     this.transitionIdx = opts.initialTransitionIndex || 0;
+
+    this.transitionState = TransitionState.InTransition;
   }
 
   getTransitionFn() {
@@ -56,6 +67,7 @@ export default class State {
 
   private nextTransition() {
     this.interp = 0;
+    this.transitionState = TransitionState.InTransition;
 
     this.transitionIdx = this.transitionIdx + 1;
 
@@ -64,11 +76,24 @@ export default class State {
     }
   }
 
-  update(dt: number, now: number) {
-    this.interp += dt * interpSpeed;
+  private exitTransition(now: number) {
+    this.transitionState = TransitionState.BetweenTransition;
+    this.nextTransitionAt = now + transitionPauseMs;
+  }
 
-    if (this.interp > 1) {
+  update(dt: number, now: number) {
+    if (this.transitionState === TransitionState.BetweenTransition && now > this.nextTransitionAt) {
+      console.log('next');
       this.nextTransition();
+    }
+
+    if (this.transitionState === TransitionState.InTransition) {
+      if (this.interp > 1) {
+        console.log('exiting transition');
+        this.exitTransition(now);
+      } else {
+        this.interp += dt * interpSpeed;
+      }
     }
 
     if (now > this.lastSpawn + spawnMs) {

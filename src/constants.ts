@@ -7,6 +7,7 @@ export const initRadius = 60;
 export const interpSpeed = 1 / 1000;
 export const rotateSpeed = Math.PI / 180 * 30 / 1000; // 30 degrees / second
 export const lineWidth = 5;
+export const transitionPauseMs = 3 * 1000;
 
 // 16:9
 export const width = 800;
