@@ -10,8 +10,12 @@ npm run run
 
 Todos:
 
-- [ ] Pause interpolation on end states for a moment
-- [ ] Rectangle <-> square transition (collapse sides in)
-- [ ] Square <-> triangle transition (collapse top two points into midpoint)
+- [x] Pause interpolation on end states for a moment
 - [ ] Transition animations should be staggered from back to front
-- [ ] Hexagon? <-> Bowtie animation (opposite points should collapse in past rectangle)
+- Transitions
+  - [ ] Rectangle <-> square transition (collapse sides in)
+  - [ ] Square <-> triangle transition (collapse top two points into midpoint)
+  - [ ] Hexagon? <-> Bowtie animation (opposite points should collapse in past rectangle)
+  - Create cool bonus transitions by allowing interp > 1
+    - [ ] "Flower" (hexagon -> circle)
+    - [ ] Hexagon -> Rectangle: https://gfycat.com/NextWildDogfish
